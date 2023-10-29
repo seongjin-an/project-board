@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           java-version: '11'
-          distribution: 'temuruin'
+          distribution: 'temurin'
       - run: chmod +x gradlew
       - run: ./gradlew clean build test
       - run: echo "Hello, ${{ inputs.your_name }}"
