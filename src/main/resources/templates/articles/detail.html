@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!--<html lang="ko" xmlns:th="http://www.thymeleaf.org">-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게시판 페이지</title>
+</head>
+<body>
+<!--    <header th:replace="~{header :: header1}"></header>-->
+<!--    <header th:replace="header :: header1"></header>-->
+    <header id="header"></header>
+
+    <main>
+        <header>
+            <h1>첫번째 글</h1>
+        </header>
+
+        <aside>
+            <p>Ansj</p>
+            <p><a rel="me" href="mailto:eprot@naver.com">eprot@naver.com</a></p>
+            <p><time datetime="2023-10-31T22:49:00">2023-10-31</time></p>
+            <p>#java</p>
+        </aside>
+        <section>
+            <p>본문<br/></p>
+            <div>
+                <form>
+                    <label for="articleComment" hidden>댓글</label>
+                    <textarea id="articleComment" placeholder="댓글 쓰기.." rows="3"></textarea>
+                    <button type="submit">쓰기</button>
+                </form>
+                <ul>
+                    <li>
+                        <div>
+                            <time><small>2023-10-31</small></time>
+                            <strong>Ansj</strong>
+                            <p>
+                                hello world11
+                            </p>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <time><small>2023-10-31</small></time>
+                            <strong>Ansj</strong>
+                            <p>
+                                Hello world22
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <nav>
+<!--                <a href="/articles/GitKraken-6-released-kor/">이전 글</a>-->
+                <a href="#">이전 글</a>
+<!--                <a href="/articles/I-became-a-gitkraken-ambassador-kor">다음 글</a>-->
+                <a href="#">다음 글</a>
+            </nav>
+        </section>
+    </main>
+<!--    <footer th:replace="~{footer :: footer1}"></footer>-->
+<!--    <footer th:replace="footer :: footer1"></footer>-->
+    <footer id="footer"></footer>
+
+</body>
+</html>
