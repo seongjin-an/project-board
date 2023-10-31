@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--<html lang="ko" xmlns:th="http://www.thymeleaf.org">-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +7,8 @@
 </head>
 <body>
 <!--    <header th:replace="~{header :: header1}"></header>-->
-    <header th:replace="header :: header1"></header>
+<!--    <header th:replace="header :: header1"></header>-->
+    <header id="header"></header>
 
     <main>
         <form>
@@ -66,7 +68,8 @@
         </nav>
     </main>
 <!--    <footer th:replace="~{footer :: footer1}"></footer>-->
-    <footer th:replace="footer :: footer1"></footer>
+<!--    <footer th:replace="footer :: footer1"></footer>-->
+    <footer id="footer"></footer>
 
 </body>
 </html>
