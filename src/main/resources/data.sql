@@ -624,3 +624,8 @@ insert into article_comment (content, created_at, created_by, modified_at, modif
 insert into article_comment (content, created_at, created_by, modified_at, modified_by, article_id) values ('Suspendisse potenti.', '2023-09-09 20:14:55', 'Laney', '2023-10-03 07:11:50', 'Darice', 113);
 insert into article_comment (content, created_at, created_by, modified_at, modified_by, article_id) values ('Donec quis orci eget orci vehicula condimentum.', '2023-04-21 13:57:49', 'Sergent', '2022-11-27 20:43:52', 'Vivianne', 78);
 insert into article_comment (content, created_at, created_by, modified_at, modified_by, article_id) values ('Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo.', '2023-09-22 18:39:30', 'Rikki', '2023-06-15 09:01:54', 'Saxe', 20);
+
+-- 테스트 계정
+-- TODO: 테스트용이지만, 비밀번호가 노출된 데이터 세팅, 개선하는 것이 좋을 지 고민해 보자.
+insert into user_account (user_id, user_password, nickname, email, memo, created_at, created_by, modified_at, modified_by)
+values ('ansj', '1234', 'Ansj', 'ansj@mail.com', 'I am ansj', now(), 'ansj', now(), 'ansj');
