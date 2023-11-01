@@ -24,6 +24,8 @@ repositories {
 print(dependencyManagement)
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5' // 타임리프, 스프링 시큐리티 동시에 존재할 때 이 디펜던시가 꼭 필요함.
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
