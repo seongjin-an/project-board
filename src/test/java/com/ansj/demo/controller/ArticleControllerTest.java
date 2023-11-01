@@ -1,10 +1,12 @@
 package com.ansj.demo.controller;
 
+import com.ansj.demo.config.SecurityConfig;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -14,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DisplayName("view 컨트롤러 - 게시글")
+@Import(SecurityConfig.class)
 @WebMvcTest(ArticleController.class)
 class ArticleControllerTest {
     private final MockMvc mvc;
@@ -51,7 +54,7 @@ class ArticleControllerTest {
                 .andExpect(model().attributeExists("articleComments"));
     }
 
-//    @Disabled("구현 중")
+    @Disabled("구현 중")
     @DisplayName("[view] [GET] 게시글 검색 전용 페이지 - 정상 호출")
     @Test
     public void givenNothiing_whenRequestingArticleSearchView_thenReturnArticleSearchView() throws Exception {
@@ -64,7 +67,7 @@ class ArticleControllerTest {
                 .andExpect(view().name("articles/search"));
     }
 
-//    @Disabled("구현 중")
+    @Disabled("구현 중")
     @DisplayName("[view] [GET] 게시글 해시태그 전용 페이지 - 정상 호출")
     @Test
     public void givenNothiing_whenRequestingArticleHashtagSearchView_thenReturnArticleHashtagSearchView() throws Exception {
