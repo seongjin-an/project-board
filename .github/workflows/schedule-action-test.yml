@@ -1,13 +1,29 @@
-name: schedule
-run-name: Execution a workflow by schedule
+#name: schedule
+#run-name: Execution a workflow by schedule
+#
+#on:
+#  schedule:
+#    - cron: '*/5 * * * *'
+#
+#jobs:
+#  hello-spring-boot:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Every 5 minute
+#        run: echo "Hello Github Action Schedule"
+name: hello-github-actions
+run-name: ${{ github.actor }}의 헬로 깃허브
 
-on:
-  schedule:
-    - cron: '*/5 * * * *'
+on: [push]
 
 jobs:
   hello-spring-boot:
     runs-on: ubuntu-latest
     steps:
-      - name: Every 5 minute
-        run: echo "Hello Github Action Schedule"
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - run: chmod +x gradlew
+      - run: ./gradlew clean build test
