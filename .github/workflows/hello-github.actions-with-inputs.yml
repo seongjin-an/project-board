@@ -1,4 +1,4 @@
-name: hello-github-actions-with-inputs
+name: test
 run-name: ${{ github.actor }}의 헬로 깃허브
 
 on:
