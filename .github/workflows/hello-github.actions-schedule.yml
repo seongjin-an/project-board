@@ -1,4 +1,4 @@
-name: hello-github-action-schedule
+name: schedule
 run-name: Execution a workflow by schedule
 
 on:
