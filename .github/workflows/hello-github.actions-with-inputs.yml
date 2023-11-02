@@ -3,13 +3,13 @@ run-name: ${{ github.actor }}의 헬로 깃허브
 
 on:
   workflow_dispatch:
-    inputs:
-      your_name:
-        required: true
-        type: string
-      your_age:
-        required: true
-        type: integer
+#    inputs:
+#      your_name:
+#        required: true
+#        type: string
+#      your_age:
+#        required: true
+#        type: integer
 
 jobs:
   hello-spring-boot:
