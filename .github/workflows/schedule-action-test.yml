@@ -1,4 +1,4 @@
-name: schedule222
+name: schedule
 run-name: Execution a workflow by schedule
 
 on:
