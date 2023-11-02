@@ -1,20 +1,8 @@
-#name: schedule
-#run-name: Execution a workflow by schedule
-#
-#on:
-#  schedule:
-#    - cron: '*/5 * * * *'
-#
-#jobs:
-#  hello-spring-boot:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Every 5 minute
-#        run: echo "Hello Github Action Schedule"
-name: hello-github-actions
-run-name: ${{ github.actor }}의 헬로 깃허브
+name: schedule-action
 
-on: [push]
+on:
+  schedule:
+    - cron: '*/5 * * * *'
 
 jobs:
   hello-spring-boot:
