@@ -1,12 +1,12 @@
 package com.ansj.demo.service;
 
-import com.ansj.demo.controller.ArticleController;
 import com.ansj.demo.domain.Article;
+import com.ansj.demo.domain.UserAccount;
 import com.ansj.demo.domain.type.SearchType;
 import com.ansj.demo.dto.ArticleDto;
-import com.ansj.demo.dto.ArticleUpdateDto;
+import com.ansj.demo.dto.ArticleWithCommentsDto;
+import com.ansj.demo.dto.UserAccountDto;
 import com.ansj.demo.repository.ArticleRepository;
-import org.assertj.core.internal.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,12 +16,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 
+@ActiveProfiles("testdb")
 @DisplayName("비즈니스 로직 - 게시글")
 @ExtendWith(MockitoExtension.class)
 class ArticleServiceTest {
@@ -38,38 +43,83 @@ class ArticleServiceTest {
         정렬 기능
      */
 
-    @DisplayName("게시글을 검색하면, 게시글 리스트를 반환한다.")
+    @DisplayName("검색없이 게시글을 검색하면, 게시글 페이지를 반환한다.")
     @Test
-    void givenSearchParameters_whenSearchingArticles_thenReturnsArticleList() {
+    void givenNoSearchParameters_whenSearchingArticles_thenReturnsArticlePage() {
         // Given
+        Pageable pageable = Pageable.ofSize(20);
+        BDDMockito.given(articleRepository.findAll(pageable)).willReturn(Page.empty());
 
         // When
-        Page<ArticleDto> articles = sut.searchArticles(SearchType.TITLE, "search keyword"); // 제목, 본문, ID, 닉네임, 해시태그
+        Page<ArticleDto> articles = sut.searchArticles(null, null, pageable); // 제목, 본문, ID, 닉네임, 해시태그
 
         // Then
-        assertThat(articles).isNotNull();
+        assertThat(articles).isEmpty();
+        BDDMockito.then(articleRepository).should().findAll(pageable);
     }
 
-    @DisplayName("게시글을 조회하면, 게시글 반환한다.")
+    @DisplayName("검색어와 함께 게시글을 검색하면, 게시글 페이지를 반환한다.")
+    @Test
+    void givenSearchParameters_whenSearchingArticles_thenReturnsArticlePage() {
+        // Given
+        SearchType searchType = SearchType.TITLE;
+        String searchKeyword = "title";
+        Pageable pageable = Pageable.ofSize(20);
+        BDDMockito.given(articleRepository.findByTitle(searchKeyword, pageable)).willReturn(Page.empty());
+
+        // When
+        Page<ArticleDto> articles = sut.searchArticles(searchType, searchKeyword, pageable);
+
+        // Then
+        assertThat(articles).isEmpty();
+        BDDMockito.then(articleRepository).should().findByTitle(searchKeyword, pageable);
+    }
+
+    @DisplayName("게시글을 조회하면, 게시글을 반환한다.")
     @Test
     void givenArticleId_whenSearchingArticle_thenReturnsArticle() {
         // Given
+        Long articleId = 1L;
+        Article article = createArticle();
+        BDDMockito.given(articleRepository.findById(articleId)).willReturn(Optional.of(article));
 
         // When
-        ArticleDto article = sut.searchArticle(1L); // 제목, 본문, ID, 닉네임, 해시태그
+        ArticleWithCommentsDto dto = sut.getArticle(articleId);
 
         // Then
-        assertThat(article).isNotNull();
+        assertThat(dto)
+                .hasFieldOrPropertyWithValue("title", article.getTitle())
+                .hasFieldOrPropertyWithValue("content", article.getContent())
+                .hasFieldOrPropertyWithValue("hashtag", article.getHashtag());
+        BDDMockito.then(articleRepository).should().findById(articleId);
+    }
+
+    @DisplayName("없는 게시글을 조회하면, 예외를 던진다.")
+    @Test
+    void givenNonexistentArticleId_whenSearchingArticle_thenThrowsException() {
+        // Given
+        Long articleId = 0L;
+        BDDMockito.given(articleRepository.findById(articleId)).willReturn(Optional.empty());
+
+        // When
+        Throwable t = catchThrowable(() -> sut.getArticle(articleId));
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("게시글이 없습니다 - articleId: " + articleId);
+        BDDMockito.then(articleRepository).should().findById(articleId);
     }
 
     @DisplayName("게시글 정보를 입력하면, 게시글을 생성한다.")
     @Test
-    void givenArticleInfo_whenSavingArticle_thenSaveArticle() {
+    void givenArticleInfo_whenSavingArticle_thenSavesArticle() {
         // Given
-        BDDMockito.given(articleRepository.save(ArgumentMatchers.any(Article.class))).willReturn(null);
+        ArticleDto dto = createArticleDto();
+        BDDMockito.given(articleRepository.save(BDDMockito.any(Article.class))).willReturn(createArticle());
 
         // When
-        sut.saveArticle(ArticleDto.of(LocalDateTime.now(), "Ansj", "title", "content", "#java"));
+        sut.saveArticle(dto);
 
         // Then
         BDDMockito.then(articleRepository).should().save(ArgumentMatchers.any(Article.class));
@@ -79,28 +129,99 @@ class ArticleServiceTest {
 
     @DisplayName("게시글의 ID 와 수정 정보를 입력하면, 게시글을 수정한다.")
     @Test
-    void givenArticleIdAndModifiedInfo_whenUpdatingArticle_thenUpdatesArticle() {
+    void givenModifiedArticleInfo_whenUpdatingArticle_thenUpdatesArticle() {
         // Given
-        BDDMockito.given(articleRepository.save(ArgumentMatchers.any(Article.class))).willReturn(null);
+        Article article = createArticle();
+        ArticleDto dto = createArticleDto("새 타이틀", "새 내용", "#springboot");
+        BDDMockito.given(articleRepository.getReferenceById(dto.id())).willReturn(article);
 
         // When
-        sut.updateArticle(1L, ArticleUpdateDto.of("title", "content", "#java"));
+        sut.updateArticle(dto);
 
         // Then
-        BDDMockito.then(articleRepository).should().save(ArgumentMatchers.any(Article.class));
+        assertThat(article)
+                .hasFieldOrPropertyWithValue("title", dto.title())
+                .hasFieldOrPropertyWithValue("content", dto.content())
+                .hasFieldOrPropertyWithValue("hashtag", dto.hashtag());
+        BDDMockito.then(articleRepository).should().getReferenceById(dto.id());
+    }
+
+    @DisplayName("없는 게시글의 수정 정보를 입력하면, 경고 로그를 찍고 아무 것도 하지 않는다.")
+    @Test
+    void givenNonexistentArticleInfo_whenUpdatingArticle_thenLogsWarningAndDoesNothing() {
+        // Given
+        ArticleDto dto = createArticleDto("새 타이틀", "새 내용", "#springboot");
+        BDDMockito.given(articleRepository.getReferenceById(dto.id())).willThrow(EntityNotFoundException.class);
+
+        // When
+        sut.updateArticle(dto);
+
+        // Then
+        BDDMockito.then(articleRepository).should().getReferenceById(dto.id());
     }
 
     @DisplayName("게시글의 ID를 입력하면, 게시글을 삭제한다.")
     @Test
     void givenArticleId_whenDeletingArticle_thenDeleteArticle() {
         // Given
-        BDDMockito.willDoNothing().given(articleRepository).delete(ArgumentMatchers.any(Article.class));
+        Long articleId = 1L;
+        BDDMockito.willDoNothing().given(articleRepository).deleteById(articleId);
 
         // When
         sut.deleteArticle(1L);
 
         // Then
-        BDDMockito.then(articleRepository).should().delete(ArgumentMatchers.any(Article.class));
+        BDDMockito.then(articleRepository).should().deleteById(articleId);
     }
 
+
+    private UserAccount createUserAccount() {
+        return UserAccount.of(
+                "uno",
+                "password",
+                "uno@email.com",
+                "Uno",
+                null
+        );
+    }
+
+    private Article createArticle() {
+        return Article.of(
+                createUserAccount(),
+                "title",
+                "content",
+                "#java"
+        );
+    }
+
+    private ArticleDto createArticleDto() {
+        return createArticleDto("title", "content", "#java");
+    }
+
+    private ArticleDto createArticleDto(String title, String content, String hashtag) {
+        return ArticleDto.of(1L,
+                createUserAccountDto(),
+                title,
+                content,
+                hashtag,
+                LocalDateTime.now(),
+                "Uno",
+                LocalDateTime.now(),
+                "Uno");
+    }
+
+    private UserAccountDto createUserAccountDto() {
+        return UserAccountDto.of(
+                1L,
+                "uno",
+                "password",
+                "uno@mail.com",
+                "Uno",
+                "This is memo",
+                LocalDateTime.now(),
+                "uno",
+                LocalDateTime.now(),
+                "uno"
+        );
+    }
 }
