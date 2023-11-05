@@ -11,7 +11,10 @@
 <body>
 <!--    <header th:replace="~{header :: header1}"></header>-->
 <!--    <header th:replace="header :: header1"></header>-->
-    <header id="header"></header>
+    <header id="header">
+        헤더 삽입부
+        <hr/>
+    </header>
 
     <main class="container">
         <div class="row">
@@ -50,21 +53,21 @@
                 </div>
             </div>
         </div>
-        <table class="table">
+        <table class="table" id="article-table">
             <thead>
                 <tr>
-                    <th class="col-6">제목</th>
-                    <th class="col-2">해시태그</th>
-                    <th class="col">작성자</th>
-                    <th class="col">작성일</th>
+                    <th class="title col-6">제목</th>
+                    <th class="hashtag col-2">해시태그</th>
+                    <th class="user-id col">작성자</th>
+                    <th class="created-at col">작성일</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>첫글</td>
-                    <td>#java</td>
-                    <td>ansj</td>
-                    <td>2023-10-30</td>
+                    <td class="title"><a>첫글</a></td>
+                    <td class="hashtag">#java</td>
+                    <td class="user-id">ansj</td>
+                    <td class="created-at"><time>2023-10-30</time></td>
                 </tr>
                 <tr>
                     <td>두번째글</td>
@@ -92,7 +95,10 @@
     </main>
 <!--    <footer th:replace="~{footer :: footer1}"></footer>-->
 <!--    <footer th:replace="footer :: footer1"></footer>-->
-    <footer id="footer"></footer>
+    <footer id="footer">
+        <hr/>
+        푸터 삽입부
+    </footer>
 <!--<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>-->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
 </body>
