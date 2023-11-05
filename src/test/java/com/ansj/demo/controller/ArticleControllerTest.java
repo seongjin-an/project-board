@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -172,17 +173,60 @@ class ArticleControllerTest {
                 .andExpect(view().name("articles/search"));
     }
 
-    @Disabled("구현 중")
-    @DisplayName("[view] [GET] 게시글 해시태그 전용 페이지 - 정상 호출")
+    @DisplayName("[view] [GET] 게시글 해시태그 검색 페이지 - 정상 호출")
     @Test
-    public void givenNothiing_whenRequestingArticleHashtagSearchView_thenReturnArticleHashtagSearchView() throws Exception {
+    public void givenNothiing_whenRequestingArticleSearchHashtagView_thenReturnArticleSearchHashtagView() throws Exception {
         // Given
+        List<String> hashtags = List.of("#java", "#spring", "#boot");
+        BDDMockito.given(articleService.searchArticlesViaHashtag(
+                BDDMockito.eq(null), BDDMockito.any(Pageable.class)
+        )).willReturn(Page.empty());
+        BDDMockito.given(articleService.getHashtags()).willReturn(hashtags);
+        BDDMockito.given(paginationService.getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt()))
+                .willReturn(List.of(1,2,3,4,5));
 
-        // When & Then
+        // When
         mvc.perform(get("/articles/search-hashtag"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(view().name("articles/search-hashtag"));
+                .andExpect(view().name("articles/search-hashtag"))
+                .andExpect(model().attribute("articles", Page.empty()))
+                .andExpect(model().attribute("hashtags", hashtags))
+                .andExpect(model().attributeExists("paginationBarNumbers"))
+                .andExpect(model().attribute("searchType", SearchType.HASHTAG));
+        // Then
+        BDDMockito.then(articleService).should().searchArticlesViaHashtag(BDDMockito.eq(null), BDDMockito.any(Pageable.class));
+        BDDMockito.then(articleService).should().getHashtags();
+        BDDMockito.then(paginationService).should().getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt());
+    }
+
+    @DisplayName("[view] [GET] 게시글 해시태그 검색 페이지 - 정상 호출, 해시태그 입력")
+    @Test
+    public void givenHashtag_whenRequestingArticleSearchHashtagView_thenReturnArticleSearchHashtagView() throws Exception {
+        // Given
+        String hashtag = "#java";
+        List<String> hashtags = List.of("#java", "#spring", "#boot");
+        BDDMockito.given(articleService.searchArticlesViaHashtag(
+                BDDMockito.eq(hashtag), BDDMockito.any(Pageable.class)
+        )).willReturn(Page.empty());
+        BDDMockito.given(articleService.getHashtags()).willReturn(hashtags);
+        BDDMockito.given(paginationService.getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt()))
+                .willReturn(List.of(1,2,3,4,5));
+
+        // When
+        mvc.perform(get("/articles/search-hashtag").queryParam("searchValue", hashtag))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/search-hashtag"))
+                .andExpect(model().attribute("articles", Page.empty()))
+                .andExpect(model().attribute("hashtags", hashtags))
+                .andExpect(model().attributeExists("paginationBarNumbers"))
+                .andExpect(model().attribute("searchType", SearchType.HASHTAG));
+
+        // Then
+        BDDMockito.then(articleService).should().searchArticlesViaHashtag(BDDMockito.eq(hashtag), BDDMockito.any(Pageable.class));
+        BDDMockito.then(articleService).should().getHashtags();
+        BDDMockito.then(paginationService).should().getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt());
     }
 
     private ArticleWithCommentsDto createArticleWithCommentsDto() {
