@@ -1,6 +1,7 @@
 package com.ansj.demo.controller;
 
 import com.ansj.demo.config.SecurityConfig;
+import com.ansj.demo.domain.type.SearchType;
 import com.ansj.demo.dto.ArticleWithCommentsDto;
 import com.ansj.demo.dto.UserAccountDto;
 import com.ansj.demo.service.ArticleService;
@@ -34,14 +35,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ArticleControllerTest {
     private final MockMvc mvc;
 
-    @MockBean private ArticleService articleService;
-    @MockBean private PaginationService paginationService;
+    @MockBean
+    private ArticleService articleService;
+    @MockBean
+    private PaginationService paginationService;
 
     public ArticleControllerTest(@Autowired MockMvc mvc) {
         this.mvc = mvc;
     }
 
-//    @Disabled("구현 중")
+    //    @Disabled("구현 중")
     @DisplayName("[view] [GET] 게시글 리스트 (게시판) 페이지 - 정상 호출")
     @Test
     public void givenNothiing_whenRequestingArticlesView_thenReturnArticlesView() throws Exception {
@@ -52,7 +55,7 @@ class ArticleControllerTest {
                 BDDMockito.any(Pageable.class)
         )).willReturn(Page.empty());
         BDDMockito.given(paginationService.getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt()))
-                        .willReturn(List.of(0, 1, 2, 3, 4));
+                .willReturn(List.of(0, 1, 2, 3, 4));
 
         // When
         mvc.perform(get("/articles"))
@@ -71,9 +74,42 @@ class ArticleControllerTest {
         BDDMockito.then(paginationService).should().getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt());
     }
 
+    @DisplayName("[view] [GET] 게시글 리스트 (게시판) 페이지 - 검색어와 함께 호출")
+    @Test
+    public void givenSearchKeyword_whenSearchingArticlesView_thenReturnArticlesView() throws Exception {
+        // Given
+        SearchType searchType = SearchType.TITLE;
+        String searchValue = "title";
+        BDDMockito.given(articleService.searchArticles(
+                BDDMockito.eq(searchType),
+                BDDMockito.eq(searchValue),
+                BDDMockito.any(Pageable.class)
+        )).willReturn(Page.empty());
+        BDDMockito.given(paginationService.getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt()))
+                .willReturn(List.of(0, 1, 2, 3, 4));
+
+        // When
+        mvc.perform(get("/articles").queryParam("searchType", searchType.name()).queryParam("searchValue", searchValue))
+                .andExpect(status().isOk())
+//                .andExpect(content().contentType(MediaType.TEXT_HTML))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/index"))
+                .andExpect(model().attributeExists("articles"))
+                .andExpect(model().attributeExists("searchTypes"));
+//                .andExpect(model().attributeExists("paginationBarNumbers"));
+
+        // Then
+        BDDMockito.then(articleService).should().searchArticles(
+                BDDMockito.eq(searchType),
+                BDDMockito.eq(searchValue),
+                BDDMockito.any(Pageable.class)
+        );
+        BDDMockito.then(paginationService).should().getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt());
+    }
+
     @DisplayName("[view][GET] 게시글 리스트 (게시판)페이지 - 페이징, 정렬 기능")
     @Test
-    void givenPagingAndSortingParams_whenSearchingArticlesPage_thenReturnsArticlesView() throws Exception{
+    void givenPagingAndSortingParams_whenSearchingArticlesPage_thenReturnsArticlesView() throws Exception {
         // Given
         String sortName = "title";
         String direction = "desc";
@@ -103,7 +139,7 @@ class ArticleControllerTest {
         BDDMockito.then(paginationService).should().getPaginationBarNumbers(pageable.getPageNumber(), Page.empty().getTotalPages());
     }
 
-//    @Disabled("구현 중")
+    //    @Disabled("구현 중")
     @DisplayName("[view] [GET] 게시글 상세 페이지 - 정상 호출")
     @Test
     public void givenNothiing_whenRequestingArticlesView_thenReturnArticleView() throws Exception {
