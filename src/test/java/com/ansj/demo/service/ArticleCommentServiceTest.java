@@ -7,6 +7,7 @@ import com.ansj.demo.dto.ArticleCommentDto;
 import com.ansj.demo.dto.UserAccountDto;
 import com.ansj.demo.repository.ArticleCommentRepository;
 import com.ansj.demo.repository.ArticleRepository;
+import com.ansj.demo.repository.UserAccountRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
@@ -31,6 +33,7 @@ class ArticleCommentServiceTest {
 
     @Mock private ArticleCommentRepository articleCommentRepository;
     @Mock private ArticleRepository articleRepository;
+    @Mock private UserAccountRepository userAccountRepository;
 
     @DisplayName("게시글 ID로 조회하면, 해당하는 댓글 리스트를 반환한다.")
     @Test
@@ -49,7 +52,8 @@ class ArticleCommentServiceTest {
         // Then
 //        assertThat(articleComments).isNotNull();
 //        BDDMockito.then(articleRepository).should().findById(articleId);
-        assertThat(actual).hasSize(1)
+        assertThat(actual)
+                .hasSize(1)
                 .first().hasFieldOrPropertyWithValue("content", expected.getContent());
         BDDMockito.then(articleCommentRepository).should().findByArticle_Id(articleId);
     }
@@ -63,6 +67,7 @@ class ArticleCommentServiceTest {
 //        BDDMockito.given(articleRepository.findById(articleId)).willReturn(Optional.of(article));
         ArticleCommentDto dto = createArticleCommentDto("댓글");
         BDDMockito.given(articleRepository.getReferenceById(dto.articleId())).willReturn(createArticle());
+        BDDMockito.given(userAccountRepository.getReferenceById(dto.userAccountDto().userId())).willReturn(createUserAccount());
         BDDMockito.given(articleCommentRepository.save(BDDMockito.any(ArticleComment.class))).willReturn(null);
 
         // When
@@ -70,6 +75,7 @@ class ArticleCommentServiceTest {
 
         // Then
         BDDMockito.then(articleRepository).should().getReferenceById(dto.articleId());
+        BDDMockito.then(userAccountRepository).should().getReferenceById(dto.userAccountDto().userId());
         BDDMockito.then(articleCommentRepository).should().save(BDDMockito.any(ArticleComment.class));
     }
 
@@ -85,6 +91,7 @@ class ArticleCommentServiceTest {
 
         // Then
         BDDMockito.then(articleRepository).should().getReferenceById(dto.articleId());
+        BDDMockito.then(userAccountRepository).shouldHaveNoInteractions();
         BDDMockito.then(articleCommentRepository).shouldHaveNoInteractions();
     }
 
@@ -164,11 +171,13 @@ class ArticleCommentServiceTest {
     }
 
     private ArticleComment createArticleComment(String content) {
-        return ArticleComment.of(
+        ArticleComment articleComment = ArticleComment.of(
                 Article.of(createUserAccount(), "title", "content", "hashtag"),
                 createUserAccount(),
                 content
         );
+//        ReflectionTestUtils.setField(articleComment, "id", 1L);
+        return articleComment;
     }
 
     private UserAccount createUserAccount() {
