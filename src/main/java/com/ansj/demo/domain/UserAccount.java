@@ -17,10 +17,10 @@ import java.util.Objects;
 })
 @Entity
 public class UserAccount extends AuditingFields {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+//    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Long id;
 
-    @Setter @Column(nullable = false, length = 50) private String userId;
+    @Id @Column(length = 50) private String userId;
     @Setter @Column(nullable = false) private String userPassword;
     @Setter @Column(length = 100) private String email;
     @Setter @Column(length = 100) private String nickname;
@@ -46,11 +46,11 @@ public class UserAccount extends AuditingFields {
         if (o == null || getClass() != o.getClass()) return false;
         UserAccount that = (UserAccount) o;
 //        return Objects.equals(id, that.id);
-        return id != null && id.equals(that.id);
+        return userId != null && userId.equals(that.userId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(userId);
     }
 }
