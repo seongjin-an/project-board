@@ -1,4 +1,4 @@
-package com.ansj.demo.domain.type;
+package com.ansj.demo.domain.constant;
 
 import lombok.Getter;
 
