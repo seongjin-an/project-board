@@ -35,6 +35,9 @@ spring:
   data.rest:
       base-path: /api
       detection-strategy: annotated
+  test:
+    database:
+      replace: none
 ---
 spring:
   config:
