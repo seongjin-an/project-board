@@ -6,6 +6,7 @@ import com.ansj.demo.domain.constant.FormStatus;
 import com.ansj.demo.domain.constant.SearchType;
 import com.ansj.demo.dto.ArticleDto;
 import com.ansj.demo.dto.ArticleWithCommentsDto;
+import com.ansj.demo.dto.HashtagDto;
 import com.ansj.demo.dto.UserAccountDto;
 import com.ansj.demo.dto.request.ArticleRequest;
 import com.ansj.demo.dto.response.ArticleResponse;
@@ -35,6 +36,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -59,71 +62,53 @@ class ArticleControllerTest {
     }
 
     //    @Disabled("구현 중")
-    @DisplayName("[view] [GET] 게시글 리스트 (게시판) 페이지 - 정상 호출")
+    @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 정상 호출")
     @Test
-    public void givenNothiing_whenRequestingArticlesView_thenReturnArticlesView() throws Exception {
+    void givenNothing_whenRequestingArticlesView_thenReturnsArticlesView() throws Exception {
         // Given
-        BDDMockito.given(articleService.searchArticles(
-                BDDMockito.eq(null),
-                BDDMockito.eq(null),
-                BDDMockito.any(Pageable.class)
-        )).willReturn(Page.empty());
-        BDDMockito.given(paginationService.getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt()))
-                .willReturn(List.of(0, 1, 2, 3, 4));
+        given(articleService.searchArticles(eq(null), eq(null), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(0, 1, 2, 3, 4));
 
-        // When
+        // When & Then
         mvc.perform(get("/articles"))
                 .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.TEXT_HTML))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(view().name("articles/index"))
                 .andExpect(model().attributeExists("articles"))
-                .andExpect(model().attributeExists("paginationBarNumbers"));
-
-        // Then
-        BDDMockito.then(articleService).should().searchArticles(BDDMockito.eq(null),
-                BDDMockito.eq(null),
-                BDDMockito.any(Pageable.class)
-        );
-        BDDMockito.then(paginationService).should().getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt());
+                .andExpect(model().attributeExists("paginationBarNumbers"))
+                .andExpect(model().attributeExists("searchTypes"))
+                .andExpect(model().attribute("searchTypeHashtag", SearchType.HASHTAG));
+        then(articleService).should().searchArticles(eq(null), eq(null), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
-    @DisplayName("[view] [GET] 게시글 리스트 (게시판) 페이지 - 검색어와 함께 호출")
+    @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 검색어와 함께 호출")
     @Test
-    public void givenSearchKeyword_whenSearchingArticlesView_thenReturnArticlesView() throws Exception {
+    void givenSearchKeyword_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
         // Given
         SearchType searchType = SearchType.TITLE;
         String searchValue = "title";
-        BDDMockito.given(articleService.searchArticles(
-                BDDMockito.eq(searchType),
-                BDDMockito.eq(searchValue),
-                BDDMockito.any(Pageable.class)
-        )).willReturn(Page.empty());
-        BDDMockito.given(paginationService.getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt()))
-                .willReturn(List.of(0, 1, 2, 3, 4));
+        given(articleService.searchArticles(eq(searchType), eq(searchValue), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(0, 1, 2, 3, 4));
 
-        // When
-        mvc.perform(get("/articles").queryParam("searchType", searchType.name()).queryParam("searchValue", searchValue))
+        // When & Then
+        mvc.perform(
+                        get("/articles")
+                                .queryParam("searchType", searchType.name())
+                                .queryParam("searchValue", searchValue)
+                )
                 .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.TEXT_HTML))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(view().name("articles/index"))
                 .andExpect(model().attributeExists("articles"))
                 .andExpect(model().attributeExists("searchTypes"));
-//                .andExpect(model().attributeExists("paginationBarNumbers"));
-
-        // Then
-        BDDMockito.then(articleService).should().searchArticles(
-                BDDMockito.eq(searchType),
-                BDDMockito.eq(searchValue),
-                BDDMockito.any(Pageable.class)
-        );
-        BDDMockito.then(paginationService).should().getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt());
+        then(articleService).should().searchArticles(eq(searchType), eq(searchValue), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
-    @DisplayName("[view][GET] 게시글 리스트 (게시판)페이지 - 페이징, 정렬 기능")
+    @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 페이징, 정렬 기능")
     @Test
-    void givenPagingAndSortingParams_whenSearchingArticlesPage_thenReturnsArticlesView() throws Exception {
+    void givenPagingAndSortingParams_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
         // Given
         String sortName = "title";
         String direction = "desc";
@@ -131,11 +116,10 @@ class ArticleControllerTest {
         int pageSize = 5;
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Order.desc(sortName)));
         List<Integer> barNumbers = List.of(1, 2, 3, 4, 5);
-        BDDMockito.given(articleService.searchArticles(null, null, pageable)).willReturn(Page.empty());
-        BDDMockito.given(paginationService.getPaginationBarNumbers(pageable.getPageNumber(), Page.empty().getTotalPages()))
-                .willReturn(barNumbers);
+        given(articleService.searchArticles(null, null, pageable)).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(pageable.getPageNumber(), Page.empty().getTotalPages())).willReturn(barNumbers);
 
-        // When
+        // When & Then
         mvc.perform(
                         get("/articles")
                                 .queryParam("page", String.valueOf(pageNumber))
@@ -147,59 +131,51 @@ class ArticleControllerTest {
                 .andExpect(view().name("articles/index"))
                 .andExpect(model().attributeExists("articles"))
                 .andExpect(model().attribute("paginationBarNumbers", barNumbers));
-
-        // Then
-        BDDMockito.then(articleService).should().searchArticles(null, null, pageable);
-        BDDMockito.then(paginationService).should().getPaginationBarNumbers(pageable.getPageNumber(), Page.empty().getTotalPages());
+        then(articleService).should().searchArticles(null, null, pageable);
+        then(paginationService).should().getPaginationBarNumbers(pageable.getPageNumber(), Page.empty().getTotalPages());
     }
 
-    @DisplayName("[view][GET] 게시글 페이지 - 인증 없을 땐로그인 페이지로 이동")
+    @DisplayName("[view][GET] 게시글 페이지 - 인증 없을 땐 로그인 페이지로 이동")
     @Test
     void givenNothing_whenRequestingArticlePage_thenRedirectsToLoginPage() throws Exception {
         // Given
         long articleId = 1L;
 
-        // When
+        // When & Then
         mvc.perform(get("/articles/" + articleId))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login"));
-
-        // Then
-        BDDMockito.then(articleService).shouldHaveNoInteractions();
-        BDDMockito.then(articleService).shouldHaveNoInteractions();
-
+        then(articleService).shouldHaveNoInteractions();
+        then(articleService).shouldHaveNoInteractions();
     }
 
-    /**@WithMockUser
-     * 모킹한 유저 정보가, 내가 실제로 구현한 인증 정보(BoardPrincipal)와 상관이 없을 때,
-     * 즉 컨트롤러 레이어에서 인증 정보를 받아서 뭔가 추가로 수행하는 일이 없을 때에는 이 방식이 좋음.
-     * 하지만, 실제 SecurityConfig 를 사용하지 않으니 실제 사용자 정보를 이용할 수 없다는 단점이 존재한다.
-     */
     @WithMockUser
-    @DisplayName("[view] [GET] 게시글 페이지 - 정상 호출, 인증된 사용자.")
+    @DisplayName("[view][GET] 게시글 페이지 - 정상 호출, 인증된 사용자")
     @Test
-    public void givenNothiing_whenRequestingArticlesView_thenReturnArticleView() throws Exception {
+    void givenAuthorizedUser_whenRequestingArticleView_thenReturnsArticleView() throws Exception {
         // Given
         Long articleId = 1L;
-        Long totalCount = 1L;
-        BDDMockito.given(articleService.getArticleWithComments(articleId)).willReturn(createArticleWithCommentsDto());
+        long totalCount = 1L;
+        given(articleService.getArticleWithComments(articleId)).willReturn(createArticleWithCommentsDto());
+        given(articleService.getArticleCount()).willReturn(totalCount);
 
-        // When는
+        // When & Then
         mvc.perform(get("/articles/" + articleId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(view().name("articles/detail"))
-                .andExpect(model().attributeExists("articleComments"));
-
-        // Then
-        BDDMockito.then(articleService).should().getArticleWithComments(articleId);
+                .andExpect(model().attributeExists("article"))
+                .andExpect(model().attributeExists("articleComments"))
+                .andExpect(model().attribute("totalCount", totalCount))
+                .andExpect(model().attribute("searchTypeHashtag", SearchType.HASHTAG));
+        then(articleService).should().getArticleWithComments(articleId);
+        then(articleService).should().getArticleCount();
     }
 
-
     @Disabled("구현 중")
-    @DisplayName("[view] [GET] 게시글 검색 전용 페이지 - 정상 호출")
+    @DisplayName("[view][GET] 게시글 검색 전용 페이지 - 정상 호출")
     @Test
-    public void givenNothiing_whenRequestingArticleSearchView_thenReturnArticleSearchView() throws Exception {
+    void givenNothing_whenRequestingArticleSearchView_thenReturnsArticleSearchView() throws Exception {
         // Given
 
         // When & Then
@@ -209,19 +185,16 @@ class ArticleControllerTest {
                 .andExpect(view().name("articles/search"));
     }
 
-    @DisplayName("[view] [GET] 게시글 해시태그 검색 페이지 - 정상 호출")
+    @DisplayName("[view][GET] 게시글 해시태그 검색 페이지 - 정상 호출")
     @Test
-    public void givenNothiing_whenRequestingArticleSearchHashtagView_thenReturnArticleSearchHashtagView() throws Exception {
+    void givenNothing_whenRequestingArticleSearchHashtagView_thenReturnsArticleSearchHashtagView() throws Exception {
         // Given
         List<String> hashtags = List.of("#java", "#spring", "#boot");
-        BDDMockito.given(articleService.searchArticlesViaHashtag(
-                BDDMockito.eq(null), BDDMockito.any(Pageable.class)
-        )).willReturn(Page.empty());
-        BDDMockito.given(articleService.getHashtags()).willReturn(hashtags);
-        BDDMockito.given(paginationService.getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt()))
-                .willReturn(List.of(1,2,3,4,5));
+        given(articleService.searchArticlesViaHashtag(eq(null), any(Pageable.class))).willReturn(Page.empty());
+        given(articleService.getHashtags()).willReturn(hashtags);
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1, 2, 3, 4, 5));
 
-        // When
+        // When & Then
         mvc.perform(get("/articles/search-hashtag"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
@@ -230,27 +203,26 @@ class ArticleControllerTest {
                 .andExpect(model().attribute("hashtags", hashtags))
                 .andExpect(model().attributeExists("paginationBarNumbers"))
                 .andExpect(model().attribute("searchType", SearchType.HASHTAG));
-        // Then
-        BDDMockito.then(articleService).should().searchArticlesViaHashtag(BDDMockito.eq(null), BDDMockito.any(Pageable.class));
-        BDDMockito.then(articleService).should().getHashtags();
-        BDDMockito.then(paginationService).should().getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt());
+        then(articleService).should().searchArticlesViaHashtag(eq(null), any(Pageable.class));
+        then(articleService).should().getHashtags();
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
-    @DisplayName("[view] [GET] 게시글 해시태그 검색 페이지 - 정상 호출, 해시태그 입력")
+    @DisplayName("[view][GET] 게시글 해시태그 검색 페이지 - 정상 호출, 해시태그 입력")
     @Test
-    public void givenHashtag_whenRequestingArticleSearchHashtagView_thenReturnArticleSearchHashtagView() throws Exception {
+    void givenHashtag_whenRequestingArticleSearchHashtagView_thenReturnsArticleSearchHashtagView() throws Exception {
         // Given
         String hashtag = "#java";
         List<String> hashtags = List.of("#java", "#spring", "#boot");
-        BDDMockito.given(articleService.searchArticlesViaHashtag(
-                BDDMockito.eq(hashtag), BDDMockito.any(Pageable.class)
-        )).willReturn(Page.empty());
-        BDDMockito.given(articleService.getHashtags()).willReturn(hashtags);
-        BDDMockito.given(paginationService.getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt()))
-                .willReturn(List.of(1,2,3,4,5));
+        given(articleService.searchArticlesViaHashtag(eq(hashtag), any(Pageable.class))).willReturn(Page.empty());
+        given(articleService.getHashtags()).willReturn(hashtags);
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1, 2, 3, 4, 5));
 
-        // When
-        mvc.perform(get("/articles/search-hashtag").queryParam("searchValue", hashtag))
+        // When & Then
+        mvc.perform(
+                        get("/articles/search-hashtag")
+                                .queryParam("searchValue", hashtag)
+                )
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(view().name("articles/search-hashtag"))
@@ -258,11 +230,9 @@ class ArticleControllerTest {
                 .andExpect(model().attribute("hashtags", hashtags))
                 .andExpect(model().attributeExists("paginationBarNumbers"))
                 .andExpect(model().attribute("searchType", SearchType.HASHTAG));
-
-        // Then
-        BDDMockito.then(articleService).should().searchArticlesViaHashtag(BDDMockito.eq(hashtag), BDDMockito.any(Pageable.class));
-        BDDMockito.then(articleService).should().getHashtags();
-        BDDMockito.then(paginationService).should().getPaginationBarNumbers(BDDMockito.anyInt(), BDDMockito.anyInt());
+        then(articleService).should().searchArticlesViaHashtag(eq(hashtag), any(Pageable.class));
+        then(articleService).should().getHashtags();
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
     @WithMockUser
@@ -279,13 +249,13 @@ class ArticleControllerTest {
                 .andExpect(model().attribute("formStatus", FormStatus.CREATE));
     }
 
-    @WithUserDetails(value = "ansjtest", setupBefore = TestExecutionEvent.TEST_EXECUTION, userDetailsServiceBeanName = "userDetailsService")
+    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("[view][POST] 새 게시글 등록 - 정상 호출")
     @Test
     void givenNewArticleInfo_whenRequesting_thenSavesNewArticle() throws Exception {
         // Given
-        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content", "#new");
-        BDDMockito.willDoNothing().given(articleService).saveArticle(BDDMockito.any(ArticleDto.class));
+        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content");
+        willDoNothing().given(articleService).saveArticle(any(ArticleDto.class));
 
         // When & Then
         mvc.perform(
@@ -297,10 +267,10 @@ class ArticleControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(view().name("redirect:/articles"))
                 .andExpect(redirectedUrl("/articles"));
-        BDDMockito.then(articleService).should().saveArticle(BDDMockito.any(ArticleDto.class));
+        then(articleService).should().saveArticle(any(ArticleDto.class));
     }
 
-    @DisplayName("[view][GET] 게시글 수정 페이지 - 인증 없을 땐로그인 페이지로 이동")
+    @DisplayName("[view][GET] 게시글 수정 페이지 - 인증 없을 땐 로그인 페이지로 이동")
     @Test
     void givenNothing_whenRequesting_thenRedirectsToLoginPage() throws Exception {
         // Given
@@ -310,17 +280,17 @@ class ArticleControllerTest {
         mvc.perform(get("/articles/" + articleId + "/form"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login"));
-        BDDMockito.then(articleService).shouldHaveNoInteractions();
+        then(articleService).shouldHaveNoInteractions();
     }
 
     @WithMockUser
-    @DisplayName("[view][GET] 게시글 수정 페이지")
+    @DisplayName("[view][GET] 게시글 수정 페이지 - 정상 호출, 인증된 사용자")
     @Test
-    void givenNothing_whenRequesting_thenReturnsUpdatedArticlePage() throws Exception {
+    void givenAuthorizedUser_whenRequesting_thenReturnsUpdatedArticlePage() throws Exception {
         // Given
         long articleId = 1L;
         ArticleDto dto = createArticleDto();
-        BDDMockito.given(articleService.getArticle(articleId)).willReturn(dto);
+        given(articleService.getArticle(articleId)).willReturn(dto);
 
         // When & Then
         mvc.perform(get("/articles/" + articleId + "/form"))
@@ -329,17 +299,17 @@ class ArticleControllerTest {
                 .andExpect(view().name("articles/form"))
                 .andExpect(model().attribute("article", ArticleResponse.from(dto)))
                 .andExpect(model().attribute("formStatus", FormStatus.UPDATE));
-        BDDMockito.then(articleService).should().getArticle(articleId);
+        then(articleService).should().getArticle(articleId);
     }
 
-    @WithUserDetails(value = "ansjtest", setupBefore = TestExecutionEvent.TEST_EXECUTION, userDetailsServiceBeanName = "userDetailsService")
+    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("[view][POST] 게시글 수정 - 정상 호출")
     @Test
     void givenUpdatedArticleInfo_whenRequesting_thenUpdatesNewArticle() throws Exception {
         // Given
         long articleId = 1L;
-        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content", "#new");
-        BDDMockito.willDoNothing().given(articleService).updateArticle(BDDMockito.eq(articleId), BDDMockito.any(ArticleDto.class));
+        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content");
+        willDoNothing().given(articleService).updateArticle(eq(articleId), any(ArticleDto.class));
 
         // When & Then
         mvc.perform(
@@ -351,17 +321,17 @@ class ArticleControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(view().name("redirect:/articles/" + articleId))
                 .andExpect(redirectedUrl("/articles/" + articleId));
-        BDDMockito.then(articleService).should().updateArticle(BDDMockito.eq(articleId), BDDMockito.any(ArticleDto.class));
+        then(articleService).should().updateArticle(eq(articleId), any(ArticleDto.class));
     }
 
-    @WithUserDetails(value = "ansjtest", setupBefore = TestExecutionEvent.TEST_EXECUTION, userDetailsServiceBeanName = "userDetailsService")
+    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("[view][POST] 게시글 삭제 - 정상 호출")
     @Test
     void givenArticleIdToDelete_whenRequesting_thenDeletesArticle() throws Exception {
         // Given
         long articleId = 1L;
-        String userId = "ansjtest";
-        BDDMockito.willDoNothing().given(articleService).deleteArticle(articleId, userId);
+        String userId = "unoTest";
+        willDoNothing().given(articleService).deleteArticle(articleId, userId);
 
         // When & Then
         mvc.perform(
@@ -372,7 +342,7 @@ class ArticleControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(view().name("redirect:/articles"))
                 .andExpect(redirectedUrl("/articles"));
-        BDDMockito.then(articleService).should().deleteArticle(articleId, userId);
+        then(articleService).should().deleteArticle(articleId, userId);
     }
 
 
@@ -381,10 +351,9 @@ class ArticleControllerTest {
                 createUserAccountDto(),
                 "title",
                 "content",
-                "#java"
+                Set.of(HashtagDto.of("java"))
         );
     }
-
 
     private ArticleWithCommentsDto createArticleWithCommentsDto() {
         return ArticleWithCommentsDto.of(
@@ -393,25 +362,25 @@ class ArticleControllerTest {
                 Set.of(),
                 "title",
                 "content",
-                "#java",
+                Set.of(HashtagDto.of("java")),
                 LocalDateTime.now(),
-                "ansj",
+                "uno",
                 LocalDateTime.now(),
-                "ansj"
+                "uno"
         );
     }
 
     private UserAccountDto createUserAccountDto() {
         return UserAccountDto.of(
-                "ansj",
+                "uno",
                 "pw",
-                "ansj@mail.com",
-                "Ansj",
+                "uno@mail.com",
+                "Uno",
                 "memo",
                 LocalDateTime.now(),
-                "ansj",
+                "uno",
                 LocalDateTime.now(),
-                "ansj"
+                "uno"
         );
     }
 }
