@@ -59,11 +59,12 @@ public class Article extends AuditingFields {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Article article = (Article) o;
-        return id != null && id.equals(article.id);
+//        return id != null && id.equals(article.id);
+        return this.getId() != null && this.getId().equals(article.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(this.getId());
     }
 }
