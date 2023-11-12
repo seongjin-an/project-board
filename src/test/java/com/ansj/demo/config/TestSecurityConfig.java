@@ -18,7 +18,7 @@ public class TestSecurityConfig {
     public void securitySetUp() {
         BDDMockito.given(userAccountRepository.findById(BDDMockito.anyString()))
                 .willReturn(Optional.of(UserAccount.of(
-                        "ansjtest", "pw", "ansj@test-mail.com", "ansj-test", "test memo"
+                        "unoTest", "pw", "ansj@test-mail.com", "ansj-test", "test memo"
         )));
     }
 }
