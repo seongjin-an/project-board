@@ -68,14 +68,14 @@ class ArticleCommentControllerTest {
 
     }
 
-    @WithUserDetails(value = "ansjtest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("[view][GET] 댓글 삭제 - 정상 호출")
     @Test
     void givenArticleCommentIdToDelete_whenRequesting_thenDeletesArticleComment() throws Exception {
         // Given
         long articleId = 1L;
         long articleCommentId = 1L;
-        String userId = "ansjtest";
+        String userId = "unoTest";
         BDDMockito.willDoNothing().given(articleCommentService).deleteArticleComment(articleCommentId, userId);
 
         // When
