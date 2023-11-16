@@ -93,4 +93,24 @@ class ArticleCommentControllerTest {
         BDDMockito.then(articleCommentService).should().deleteArticleComment(articleCommentId, userId);
     }
 
+    @WithUserDetails(value = "unoTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @DisplayName("[view][POST] 대댓글 등록 - 정상 호출")
+    @Test
+    void givenArticleCommentInfoWithParentCommentId_whenRequesting_thenSavesNewChildComment() throws Exception {
+        // Given
+        long articleId = 1L;
+        ArticleCommentRequest request = ArticleCommentRequest.of(articleId, 1L, "test comment");
+        BDDMockito.willDoNothing().given(articleCommentService).saveArticleComment(BDDMockito.any(ArticleCommentDto.class));
+
+        // When & Then
+        mvc.perform(
+                MockMvcRequestBuilders.post("/comments/new")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .content(formDataEncoder.encode(request))
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+        )
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.view().name("redirect:/articles/" + articleId));
+
+    }
 }
